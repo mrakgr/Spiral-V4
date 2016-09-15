@@ -129,7 +129,7 @@ let parseAnyNum depth (str: CharStream<UserState>) =
     <| str
 
 let parseAnyAr (p: int -> Parser<_,UserState>) depth =
-    (%% '[' -- spaces -- +.(p depth) -- ']' -|> id)
+    %% '[' -- spaces -- +.(p depth) -- ']' -|> id
     |> fun p -> parseTempl false None p depth
     |>> NestedAr 
 
