@@ -138,7 +138,7 @@ let rec parseAny depth (str: CharStream<UserState>): Reply<FutharkArray> =
     match str.UserState.max_depth with
     | Some max_depth -> 
         if max_depth-1 = depth then 
-            parseAnyNum (depth+1) // Don't mind parseAnyNum depth. This is needed so the parser works correctly.
+            parseAnyNum (depth+1)
         else 
             parseAnyAr parseAny (depth+1)
     | _ -> 
