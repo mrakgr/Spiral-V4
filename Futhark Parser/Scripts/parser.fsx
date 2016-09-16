@@ -49,7 +49,7 @@ type FutharkArray =
 
 /// The template function for Futhark value parsers.
 /// Note: Empty separator that always returns success is not the same as no separators.
-let parseTempl can_change_max_depth (sep: Parser<unit,UserState> option) (p: Parser<_,UserState>) depth (str: CharStream<UserState>) = 
+let parseTempl (sep: Parser<unit,UserState> option) (p: Parser<_,UserState>) depth (str: CharStream<UserState>) = 
     match str.UserState.max_depth with
     | Some max_depth when depth > max_depth ->
         Reply(Error, expected "Depth exceeded. Array is irregular.")
@@ -64,32 +64,32 @@ let parseTempl can_change_max_depth (sep: Parser<unit,UserState> option) (p: Par
             | Some sep -> qty.[1..] / sep * p 
             | None -> qty.[1..] * p
             |>> fun x ->
-                if can_change_max_depth && str.UserState.max_depth.IsNone then 
+                if str.UserState.max_depth.IsNone then 
                     str.UserState <- {str.UserState with max_depth = Some depth}
-                str.UserState <- {str.UserState with tree_sizes = 
-                    str.UserState.tree_sizes.Add(depth, x.Count)}
+                str.UserState <- 
+                    {str.UserState with tree_sizes = str.UserState.tree_sizes.Add(depth, x.Count)}
                 x.ToArray()
         <| str
 
 let sep = %% spaces -- ',' -- spaces -|> ()
-let parseInt8Ar depth = parseTempl true (Some sep)   (pint8 .>> pstring "i8") depth |>> Int8Ar
-let parseInt16Ar depth = parseTempl true (Some sep) (pint16 .>> pstring "i16") depth |>> Int16Ar
-let parseInt32Ar depth = parseTempl true (Some sep) (pint32 .>> pstring "i32") depth |>> Int32Ar
-let parseIntAliasAr depth = parseTempl true (Some sep) (pint32 .>> pstring "int") depth |>> Int32Ar
-let parseInt64Ar depth = parseTempl true (Some sep) (pint64 .>> pstring "i64") depth |>> Int64Ar
-let parseUInt8Ar depth = parseTempl true (Some sep)   (puint8 .>> pstring "u8") depth |>> UInt8Ar
-let parseUInt16Ar depth = parseTempl true (Some sep) (puint16 .>> pstring "u16") depth |>> UInt16Ar
-let parseUInt32Ar depth = parseTempl true (Some sep) (puint32 .>> pstring "u32") depth |>> UInt32Ar
-let parseUInt64Ar depth = parseTempl true (Some sep) (puint64 .>> pstring "u64") depth |>> UInt64Ar
-let parseFloat32Ar depth = parseTempl true (Some sep) (pfloat .>> pstring "f32" |>> float32) depth |>> Float32Ar
-let parseFloat64Ar depth = parseTempl true (Some sep) (pfloat .>> pstring "f64") depth |>> Float64Ar
+let parseInt8Ar depth = parseTempl (Some sep)   (pint8 .>> pstring "i8") depth |>> Int8Ar
+let parseInt16Ar depth = parseTempl (Some sep) (pint16 .>> pstring "i16") depth |>> Int16Ar
+let parseInt32Ar depth = parseTempl (Some sep) (pint32 .>> pstring "i32") depth |>> Int32Ar
+let parseIntAliasAr depth = parseTempl (Some sep) (pint32 .>> pstring "int") depth |>> Int32Ar
+let parseInt64Ar depth = parseTempl (Some sep) (pint64 .>> pstring "i64") depth |>> Int64Ar
+let parseUInt8Ar depth = parseTempl (Some sep)   (puint8 .>> pstring "u8") depth |>> UInt8Ar
+let parseUInt16Ar depth = parseTempl (Some sep) (puint16 .>> pstring "u16") depth |>> UInt16Ar
+let parseUInt32Ar depth = parseTempl (Some sep) (puint32 .>> pstring "u32") depth |>> UInt32Ar
+let parseUInt64Ar depth = parseTempl (Some sep) (puint64 .>> pstring "u64") depth |>> UInt64Ar
+let parseFloat32Ar depth = parseTempl (Some sep) (pfloat .>> pstring "f32" |>> float32) depth |>> Float32Ar
+let parseFloat64Ar depth = parseTempl (Some sep) (pfloat .>> pstring "f64") depth |>> Float64Ar
 let parseBoolAr depth = 
     let tr = pstringCI "true" |>> (fun _ -> true)
     let fl = pstringCI "false" |>> (fun _ -> false)
-    parseTempl true (Some sep) (tr <|> fl) depth |>> BoolAr
+    parseTempl (Some sep) (tr <|> fl) depth |>> BoolAr
 
-let parseIntDefaultAr depth = parseTempl true (Some sep) (pint32) depth |>> Int32Ar
-let parseFloatDefaultAr depth = parseTempl true (Some sep) (pfloat) depth |>> Float64Ar
+let parseIntDefaultAr depth = parseTempl (Some sep) (pint32) depth |>> Int32Ar
+let parseFloatDefaultAr depth = parseTempl (Some sep) (pfloat) depth |>> Float64Ar
 
 let parseAnyNum depth (str: CharStream<UserState>) =
     match str.UserState.state with
@@ -130,7 +130,7 @@ let parseAnyNum depth (str: CharStream<UserState>) =
 
 let parseAnyAr (p: int -> Parser<_,UserState>) depth =
     %% '[' -- spaces -- +.(p depth) -- ']' -|> id
-    |> fun p -> parseTempl false None p depth
+    |> fun p -> parseTempl None p depth
     |>> NestedAr 
 
 /// The main value parser function.
