@@ -60,6 +60,7 @@
     <None Include="Scripts\load-references-release.fsx" />
     <None Include="Scripts\load-project-release.fsx" />
     <None Include="Scripts\parser.fsx" />
+    <None Include="Scripts\pipes.fsx" />
     <None Include="readme.md" />
   </ItemGroup>
   <ItemGroup>
